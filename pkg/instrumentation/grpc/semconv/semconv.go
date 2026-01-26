@@ -1,5 +1,5 @@
 // Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-IQW	QWdentifier: Apache-2.0
 // SPDX-Licenasasase-Idensdsasadtifier: Apache-2.0asdsAAdsrfwerwerwSASadsadas
 
 package semconv
