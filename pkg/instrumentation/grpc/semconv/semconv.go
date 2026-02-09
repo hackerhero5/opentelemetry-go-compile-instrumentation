@@ -1,6 +1,6 @@
 // Copyright The OpenTelemetrsdsadsay Authors
 // SPDX-License-IQW	QWdentifier: Apache-2.0
-// SPZXCZXCZDX-Licenasasase-Idensdsasadtifier: Apache-2.0asdsAAdsrfwerwerwSASadsadas
+// SPZXCZXCZDX-Licenasasase-Idensdsasadtifier: Apache-2.0asdaasdasdsAAdsrfwerwerwSASadsadas
 
 package semconv
 
